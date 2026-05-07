@@ -1,0 +1,109 @@
+{
+  "timestamp": "2026-05-07T18:54:44.921124",
+  "dataset": "Home Credit Default Risk",
+  "summary": {
+    "overall_psi": 0.022578,
+    "overall_status": "STABLE",
+    "total_features_checked": 10,
+    "critical_features": [],
+    "warning_features": [
+      "DAYS_EMPLOYED"
+    ],
+    "stable_features": 9,
+    "reference_rows": 76707,
+    "production_rows": 32875,
+    "recommendation": "No action required."
+  },
+  "features": {
+    "EXT_SOURCE_1": {
+      "psi": 0.000408,
+      "status": "STABLE",
+      "level": "green",
+      "action": "No action required.",
+      "reference_mean": 0.5074,
+      "production_mean": 0.5097,
+      "mean_shift_pct": 0.45
+    },
+    "EXT_SOURCE_2": {
+      "psi": 0.00055,
+      "status": "STABLE",
+      "level": "green",
+      "action": "No action required.",
+      "reference_mean": 0.5289,
+      "production_mean": 0.5303,
+      "mean_shift_pct": 0.26
+    },
+    "EXT_SOURCE_3": {
+      "psi": 0.000445,
+      "status": "STABLE",
+      "level": "green",
+      "action": "No action required.",
+      "reference_mean": 0.4962,
+      "production_mean": 0.4979,
+      "mean_shift_pct": 0.35
+    },
+    "DAYS_BIRTH": {
+      "psi": 0.000646,
+      "status": "STABLE",
+      "level": "green",
+      "action": "No action required.",
+      "reference_mean": -14826.7778,
+      "production_mean": -14860.3854,
+      "mean_shift_pct": 0.23
+    },
+    "DAYS_EMPLOYED": {
+      "psi": 0.15816,
+      "status": "WARNING",
+      "level": "yellow",
+      "action": "Increase monitoring frequency. Consider model re-evaluation.",
+      "reference_mean": 33241.1951,
+      "production_mean": 33576.461,
+      "mean_shift_pct": 1.01
+    },
+    "AMT_CREDIT": {
+      "psi": 0.000369,
+      "status": "STABLE",
+      "level": "green",
+      "action": "No action required.",
+      "reference_mean": 623523.5997,
+      "production_mean": 623675.0296,
+      "mean_shift_pct": 0.02
+    },
+    "AMT_INCOME_TOTAL": {
+      "psi": 0.064045,
+      "status": "STABLE",
+      "level": "green",
+      "action": "No action required.",
+      "reference_mean": 180100.3433,
+      "production_mean": 179495.3726,
+      "mean_shift_pct": 0.34
+    },
+    "AMT_ANNUITY": {
+      "psi": 0.000247,
+      "status": "STABLE",
+      "level": "green",
+      "action": "No action required.",
+      "reference_mean": 28143.7839,
+      "production_mean": 28097.2122,
+      "mean_shift_pct": 0.17
+    },
+    "DAYS_REGISTRATION": {
+      "psi": 0.000675,
+      "status": "STABLE",
+      "level": "green",
+      "action": "No action required.",
+      "reference_mean": -4502.2924,
+      "production_mean": -4508.5052,
+      "mean_shift_pct": 0.14
+    },
+    "DAYS_ID_PUBLISH": {
+      "psi": 0.000235,
+      "status": "STABLE",
+      "level": "green",
+      "action": "No action required.",
+      "reference_mean": -2968.822,
+      "production_mean": -2967.7199,
+      "mean_shift_pct": 0.04
+    }
+  }
+}
