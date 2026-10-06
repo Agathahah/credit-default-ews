@@ -1,0 +1,73 @@
+{
+  "dataset": "Home Credit Default Risk, application_train",
+  "rows": {
+    "train": 184506,
+    "validation": 61502,
+    "test": 61503
+  },
+  "default_rate": 0.0807,
+  "columns_dropped_over_40pct_missing_in_train": 49,
+  "n_features": 78,
+  "protected_excluded": [
+    "CODE_GENDER"
+  ],
+  "test": {
+    "logistic_regression_baseline": {
+      "roc_auc": 0.745,
+      "pr_auc": 0.2249,
+      "ks": 0.3662,
+      "brier": 0.0687,
+      "mean_predicted": 0.0806,
+      "base_rate": 0.0807
+    },
+    "xgboost_raw": {
+      "roc_auc": 0.7625,
+      "pr_auc": 0.2512,
+      "ks": 0.3908,
+      "brier": 0.0675,
+      "mean_predicted": 0.0802,
+      "base_rate": 0.0807
+    },
+    "xgboost_calibrated": {
+      "roc_auc": 0.7618,
+      "pr_auc": 0.2411,
+      "ks": 0.3899,
+      "brier": 0.0675,
+      "mean_predicted": 0.0801,
+      "base_rate": 0.0807
+    },
+    "xgboost_with_gender": {
+      "roc_auc": 0.7647,
+      "pr_auc": 0.2532,
+      "ks": 0.3967,
+      "brier": 0.0674,
+      "mean_predicted": 0.0802,
+      "base_rate": 0.0807
+    }
+  },
+  "best_iteration": 784,
+  "top10pct_share_of_defaults": 0.3408,
+  "top_features_by_gain": {
+    "EXT_SOURCE_2": 61.94,
+    "EXT_SOURCE_3": 59.52,
+    "NAME_EDUCATION_TYPE": 27.27,
+    "CREDIT_GOODS_RATIO": 18.65,
+    "FLAG_DOCUMENT_3": 18.34,
+    "ANNUITY_CREDIT_RATIO": 16.92,
+    "NAME_CONTRACT_TYPE": 16.69,
+    "REGION_RATING_CLIENT_W_CITY": 16.43,
+    "FLAG_OWN_CAR": 15.28,
+    "DEF_30_CNT_SOCIAL_CIRCLE": 14.83,
+    "DAYS_EMPLOYED": 14.59,
+    "REG_CITY_NOT_LIVE_CITY": 14.48,
+    "DEF_60_CNT_SOCIAL_CIRCLE": 14.13,
+    "AMT_REQ_CREDIT_BUREAU_DAY": 13.7,
+    "ORGANIZATION_TYPE": 12.69
+  },
+  "versions": {
+    "python": "3.12.3",
+    "xgboost": "3.4.1",
+    "scikit-learn": "1.9.1",
+    "pandas": "3.0.6"
+  }
+}
