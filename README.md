@@ -34,6 +34,10 @@ Reviewing the riskiest 10% of applications finds about a third of all defaulters
 
 ![Test evaluation](reports/16_test_evaluation.png)
 
+**What drives the score** ([`notebooks/03_explainability.ipynb`](notebooks/03_explainability.ipynb), SHAP on 2,000 test applicants). The notebook first checks that the saved model reproduces `reports/metrics.json` on the rebuilt test split, then computes exact TreeSHAP values with XGBoost (`pred_contribs`). The two external bureau scores carry 29% of the total mean |SHAP|, so much of the model's skill is borrowed from them. SHAP describes the model's behaviour, not causal effects.
+
+![SHAP summary](reports/10_shap_summary.png)
+
 ## Audit, October 2026: what changed and why
 
 The first version lived only in notebooks. Re-running it from scratch exposed these issues.
@@ -90,9 +94,9 @@ src/features.py     row-wise ratios, sentinel handling, train-only column/catego
 src/metrics.py      ROC/PR/KS/Brier summary, decile table, PSI
 src/train.py        split → baseline → XGBoost → calibration → reports/ and models/
 monitoring/         PSI drift detector (demo with simulated drift)
-notebooks/          01 EDA, 02 modeling (v1), 03 SHAP explainability
+notebooks/          01 EDA, 02 modeling (v1 record), 03 SHAP explainability of the v2 model
 reports/            metrics.json, decile_table.csv, charts
-models/             xgb_credit_default.json + preprocessing.json (v1 pickles kept for the notebooks)
+models/             xgb_credit_default.json + preprocessing.json
 tests/              synthetic-data tests
 ```
 
@@ -100,7 +104,8 @@ tests/              synthetic-data tests
 
 - Home Credit gives no application dates, so the split is random, not time-based. A real deployment needs an out-of-time test.
 - Only `application_train` is used; bureau and previous-application tables would add signal.
-- The SHAP notebook explains the v1 model. Re-running it on the v2 model is the next step.
+- Notebook 02 is kept as the record of the v1 modelling and is not re-runnable (its pickles were removed); `src/train.py` replaces it.
+- Fairness is limited to excluding `CODE_GENDER` and measuring the cost. Error rates by group have not been compared yet.
 - The model is not served. A scoring API with input validation and logging is the step after that.
 
 ---
