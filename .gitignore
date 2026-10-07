@@ -1,6 +1,7 @@
 venv/
 data/
 *.csv
+!reports/decile_table.csv
 *.zip
 .ipynb_checkpoints/
 __pycache__/
