@@ -1,0 +1,6 @@
+-r requirements.txt
+jupyterlab
+seaborn
+shap
+lightgbm
+kaggle

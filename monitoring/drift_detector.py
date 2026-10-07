@@ -10,13 +10,14 @@
 # PSI >= 0.2       → Critical, retrain segera
 # ============================================================
 
-import numpy as np
-import pandas as pd
 import json
 import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+import numpy as np
+import pandas as pd
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,9 +39,11 @@ def interpret_psi(psi: float) -> dict:
     if psi < 0.1:
         return {"status": "STABLE",   "level": "green",  "action": "No action required."}
     elif psi < 0.2:
-        return {"status": "WARNING",  "level": "yellow", "action": "Increase monitoring frequency. Consider model re-evaluation."}
+        return {"status": "WARNING", "level": "yellow",
+                "action": "Increase monitoring frequency. Consider model re-evaluation."}
     else:
-        return {"status": "CRITICAL", "level": "red",    "action": "Retrain model with recent data immediately."}
+        return {"status": "CRITICAL", "level": "red",
+                "action": "Investigate the shifted features; retrain if performance has dropped."}
 
 
 class DriftDetector:
@@ -52,18 +55,19 @@ class DriftDetector:
     di notebooks/03_explainability.ipynb.
     """
 
-    # Top 10 features berdasarkan SHAP importance — sumber: 03_explainability.ipynb
+    # Numeric inputs that the model actually uses (EXT_SOURCE_1 is not
+    # monitored: it is >40% missing and dropped before training).
     FEATURES_TO_MONITOR = [
-        "EXT_SOURCE_1",       # External credit score 1
-        "EXT_SOURCE_2",       # External credit score 2
-        "EXT_SOURCE_3",       # External credit score 3
-        "DAYS_BIRTH",         # Usia applicant (hari)
-        "DAYS_EMPLOYED",      # Lama bekerja (hari)
-        "AMT_CREDIT",         # Jumlah kredit
-        "AMT_INCOME_TOTAL",   # Total pendapatan tahunan
-        "AMT_ANNUITY",        # Cicilan tahunan
-        "DAYS_REGISTRATION",  # Lama registrasi dokumen
-        "DAYS_ID_PUBLISH"     # Lama ID diterbitkan
+        "EXT_SOURCE_2",
+        "EXT_SOURCE_3",
+        "DAYS_BIRTH",
+        "DAYS_EMPLOYED",
+        "AMT_CREDIT",
+        "AMT_INCOME_TOTAL",
+        "AMT_ANNUITY",
+        "AMT_GOODS_PRICE",
+        "DAYS_REGISTRATION",
+        "DAYS_ID_PUBLISH",
     ]
 
     def __init__(self, reference_data: pd.DataFrame, output_dir: str = "monitoring/reports"):
@@ -72,7 +76,8 @@ class DriftDetector:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"DriftDetector initialized. Reference: {len(reference_data):,} rows")
 
-    def detect(self, production_data: pd.DataFrame, features: Optional[list] = None) -> dict:
+    def detect(self, production_data: pd.DataFrame, features: Optional[list] = None,
+               simulated: bool = False) -> dict:
         features  = features or self.FEATURES_TO_MONITOR
         available = [f for f in features
                      if f in self.reference_data.columns and f in production_data.columns]
@@ -109,19 +114,27 @@ class DriftDetector:
                 logger.info(f"  STABLE:   {feature} (PSI={psi:.4f})")
 
         overall_psi = float(np.mean([r["psi"] for r in results.values()]))
+        # The overall status is the worst feature status. Averaging PSI would
+        # let one CRITICAL feature hide behind nine stable ones.
+        worst = max(results.values(), key=lambda r: r["psi"])["psi"]
         report = {
             "timestamp": datetime.now().isoformat(),
             "dataset": "Home Credit Default Risk",
+            # True when the "production" sample is a hold-out slice with drift
+            # injected on purpose. Such a report demonstrates the detector; it
+            # says nothing about real-world drift.
+            "simulated_drift": simulated,
             "summary": {
                 "overall_psi":            round(overall_psi, 6),
-                "overall_status":         interpret_psi(overall_psi)["status"],
+                "overall_status":         interpret_psi(worst)["status"],
+                "max_feature_psi":        round(worst, 6),
                 "total_features_checked": len(available),
                 "critical_features":      critical_list,
                 "warning_features":       warning_list,
                 "stable_features":        len(available) - len(critical_list) - len(warning_list),
                 "reference_rows":         len(self.reference_data),
                 "production_rows":        len(production_data),
-                "recommendation":         interpret_psi(overall_psi)["action"]
+                "recommendation":         interpret_psi(worst)["action"]
             },
             "features": results
         }
@@ -129,7 +142,10 @@ class DriftDetector:
         s = report["summary"]
         logger.info("=" * 52)
         logger.info(f"Overall PSI    : {s['overall_psi']:.4f} — {s['overall_status']}")
-        logger.info(f"Critical       : {len(s['critical_features'])} | Warning: {len(s['warning_features'])} | Stable: {s['stable_features']}")
+        logger.info(
+            f"Critical: {len(s['critical_features'])} | Warning: {len(s['warning_features'])}"
+            f" | Stable: {s['stable_features']}"
+        )
         logger.info(f"Recommendation : {s['recommendation']}")
         logger.info("=" * 52)
         return report
@@ -160,14 +176,15 @@ if __name__ == "__main__":
     cols = DriftDetector.FEATURES_TO_MONITOR + ["TARGET"]
     df   = pd.read_csv(DATA_PATH, usecols=[c for c in cols
                                            if c in pd.read_csv(DATA_PATH, nrows=0).columns])
-    df   = df.dropna()
-    logger.info(f"Loaded: {len(df):,} rows")
+    logger.info(f"Loaded: {len(df):,} rows (missing values are ignored per feature)")
 
     split        = int(len(df) * 0.7)
     df_reference = df.iloc[:split].copy()
     df_production = df.iloc[split:].copy()
 
-    # Simulasi drift: shift distribusi income dan employment
+    # DEMO ONLY: there is no production traffic for this project. The last 30%
+    # of rows plays "production" and drift is injected into two features so the
+    # detector has something to find. The report is marked simulated_drift=True.
     np.random.seed(42)
     if "AMT_INCOME_TOTAL" in df_production.columns:
         df_production["AMT_INCOME_TOTAL"] *= np.random.uniform(0.85, 1.15, len(df_production))
@@ -175,6 +192,6 @@ if __name__ == "__main__":
         df_production["DAYS_EMPLOYED"] += np.random.normal(30, 15, len(df_production))
 
     detector = DriftDetector(reference_data=df_reference)
-    report   = detector.detect(production_data=df_production)
+    report   = detector.detect(production_data=df_production, simulated=True)
     path     = detector.save_report(report)
     print(f"\nReport saved: {path}")
